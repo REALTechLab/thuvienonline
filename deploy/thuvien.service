@@ -1,0 +1,16 @@
+# sudo cp deploy/thuvien.service /etc/systemd/system/ && sudo systemctl enable --now thuvien
+[Unit]
+Description=Thu vien DTU Online
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/thuvien
+ExecStart=/usr/bin/node server.js
+Environment=PORT=3000 HOST=127.0.0.1
+Restart=always
+RestartSec=3
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

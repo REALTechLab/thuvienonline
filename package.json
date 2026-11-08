@@ -1,0 +1,10 @@
+{
+  "name": "dtu-thu-vien-online",
+  "version": "1.0.0",
+  "description": "Game thư viện online Đại học Duy Tân (three.js + Node.js)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}
