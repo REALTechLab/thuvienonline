@@ -1,5 +1,13 @@
-// Danh mục sách theo từng kệ. Có thể thay bằng dữ liệu thật của thư viện sau này.
-import { CATEGORIES } from './layout.js';
+// Dữ liệu sách ban đầu. Khi máy chủ chạy lần đầu, dữ liệu này được chép vào data/db.json;
+// sau đó thủ thư quản lý sách trong game (cửa sổ "Quản lý sách"), không cần sửa file này nữa.
+import { LAYOUT } from './layout.js';
+
+const CATEGORY_NAMES = [
+  'Công nghệ thông tin', 'Trí tuệ nhân tạo & Dữ liệu', 'Điện – Điện tử', 'Xây dựng & Kiến trúc',
+  'Kinh tế học', 'Quản trị kinh doanh', 'Kế toán – Tài chính', 'Du lịch – Khách sạn',
+  'Y – Dược – Điều dưỡng', 'Ngoại ngữ', 'Luật học', 'Khoa học xã hội & Nhân văn',
+  'Toán & Khoa học tự nhiên', 'Văn học & Kỹ năng sống', 'Tạp chí & Báo', 'Sách mới về',
+];
 
 const TITLES = [
   ['Nhập môn lập trình với C++', 'Cấu trúc dữ liệu và giải thuật', 'Cơ sở dữ liệu', 'Mạng máy tính', 'Hệ điều hành', 'Lập trình Web với JavaScript', 'Công nghệ phần mềm', 'An toàn thông tin'],
@@ -22,16 +30,40 @@ const TITLES = [
 
 const PREFIX = ['IT', 'AI', 'EE', 'CE', 'EC', 'BA', 'AC', 'TO', 'MD', 'FL', 'LW', 'SS', 'MS', 'LT', 'MG', 'NW'];
 
-export const BOOKS = [];
-TITLES.forEach((list, c) => {
-  list.forEach((title, i) => {
-    BOOKS.push({
-      id: `${PREFIX[c]}-${String(i + 1).padStart(2, '0')}`,
-      title, category: c, categoryName: CATEGORIES[c],
-      copies: c >= 14 ? 1 : 2 + (i % 3),
-      borrowable: c !== 14, // tạp chí chỉ đọc tại chỗ
-    });
+export function seedCatalog() {
+  const categories = CATEGORY_NAMES.map((name, i) => ({ id: 'C' + String(i + 1).padStart(2, '0'), name }));
+  const books = [];
+  TITLES.forEach((list, c) => {
+    const shelf = LAYOUT.shelves.find(s => s.seed === c)?.id || LAYOUT.shelves[0].id;
+    list.forEach((title, i) => books.push({
+      id: `${PREFIX[c]}-${String(i + 1).padStart(2, '0')}`, title, author: '',
+      category: categories[c].id, shelf, copies: c >= 14 ? 1 : 2 + (i % 3), borrowable: c !== 14,
+    }));
   });
-});
-export const BOOK_BY_ID = Object.fromEntries(BOOKS.map(b => [b.id, b]));
-export const booksOfCategory = c => BOOKS.filter(b => b.category === c);
+  const shelfLabels = {};
+  for (const s of LAYOUT.shelves) shelfLabels[s.id] = CATEGORY_NAMES[s.seed] || '';
+  return { categories, books, shelfLabels };
+}
+
+// Kiểm tra & chuẩn hóa một cuốn sách (dùng ở máy chủ khi thủ thư thêm/sửa/nhập)
+export const SHELF_IDS = LAYOUT.shelves.map(s => s.id);
+export function normalizeBook(b, catalog) {
+  const str = (v, n) => String(v ?? '').replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+  const out = {
+    id: str(b.id, 16).toUpperCase().replace(/\s/g, ''),
+    title: str(b.title, 120), author: str(b.author, 80),
+    category: str(b.category, 40), shelf: str(b.shelf, 8).toUpperCase(),
+    copies: Math.floor(+b.copies), borrowable: b.borrowable === true || b.borrowable === 'true' || b.borrowable === 1 || b.borrowable === '1' || /^(có|co|yes|x)$/i.test(String(b.borrowable)),
+  };
+  // cho phép nhập phân loại bằng tên thay vì mã
+  if (!catalog.categories.some(c => c.id === out.category)) {
+    const byName = catalog.categories.find(c => c.name.toLowerCase() === out.category.toLowerCase());
+    if (byName) out.category = byName.id;
+  }
+  if (!/^[A-Z0-9-]{2,16}$/.test(out.id)) return { error: 'Mã sách gồm 2–16 ký tự chữ, số hoặc dấu gạch ngang.' };
+  if (out.title.length < 2) return { error: 'Tên sách quá ngắn.' };
+  if (!catalog.categories.some(c => c.id === out.category)) return { error: `Không có phân loại "${out.category}".` };
+  if (!SHELF_IDS.includes(out.shelf)) return { error: `Không có kệ "${out.shelf}". Kệ hợp lệ: ${SHELF_IDS[0]}–${SHELF_IDS[SHELF_IDS.length - 1]}.` };
+  if (!Number.isFinite(out.copies) || out.copies < 0 || out.copies > 999) return { error: 'Số lượng phải từ 0 đến 999.' };
+  return { book: out };
+}

@@ -5,19 +5,42 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { LibraryCore } from './shared/core.js';
+import { LibraryCore, DB_VERSION } from './shared/core.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = +process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+const LIB_FILE = process.env.LIBRARIANS_FILE || path.join(ROOT, 'config', 'librarians.json');
 const MAX_FRAME = 64 * 1024;
 
 // ---------- Lưu dữ liệu ----------
 fs.mkdirSync(DATA_DIR, { recursive: true });
 let db = {};
 try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { db = {}; }
+if (Object.keys(db).length && db.version !== DB_VERSION) {
+  // dữ liệu phiên bản cũ (đăng nhập bằng MSSV) → cất sang file khác và bắt đầu dữ liệu mới
+  const bak = path.join(DATA_DIR, `db.v${db.version || 1}.backup-${Date.now()}.json`);
+  fs.renameSync(DB_FILE, bak);
+  console.log('Dữ liệu cũ đã được lưu sang', bak);
+  db = {};
+}
+
+// ---------- Tài khoản thủ thư (file riêng, sửa bằng editor ngoài) ----------
+function readLibrarians() {
+  try {
+    const raw = fs.readFileSync(LIB_FILE, 'utf8').replace(/^\uFEFF/, '');
+    const j = JSON.parse(raw);
+    const list = Array.isArray(j) ? j : j.librarians;
+    if (!Array.isArray(list)) throw new Error('thiếu mảng "librarians"');
+    return list;
+  } catch (e) {
+    console.error(`Không đọc được ${LIB_FILE}: ${e.message}`);
+    return null;
+  }
+}
+const initialLibs = readLibrarians() || [];
 let saveTimer = null, saving = false, pending = false;
 function scheduleSave() {
   if (saveTimer) return;
@@ -51,10 +74,17 @@ const randomId = (n) => crypto.randomBytes(Math.ceil(n / 2)).toString('hex').sli
 const clients = new Map(); // sid -> socket wrapper
 let nextSid = 1;
 const core = new LibraryCore({
-  db, hashPin, verifyPin, randomId, onChange: scheduleSave,
+  db, hashPin, verifyPin, randomId, onChange: scheduleSave, librarians: initialLibs,
   send: (sid, msg) => clients.get(sid)?.send(JSON.stringify(msg)),
 });
 setInterval(() => core.flush(), 100);
+console.log(`Tài khoản thủ thư: ${core.libDefs.map(d => `${d.name} (${d.username})`).join(', ') || 'chưa có'}`);
+fs.watchFile(LIB_FILE, { interval: 2000 }, () => {
+  const list = readLibrarians();
+  if (!list) return console.error('Giữ nguyên tài khoản thủ thư cũ vì file mới bị lỗi.');
+  core.setLibrarians(list);
+  console.log(`Đã nạp lại tài khoản thủ thư: ${core.libDefs.map(d => d.name).join(', ')}`);
+});
 setInterval(() => core.tick(), 5000);
 
 // ---------- File tĩnh ----------

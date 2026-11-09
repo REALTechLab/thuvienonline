@@ -1,6 +1,6 @@
 // Dựng không gian thư viện Duy Tân theo mặt bằng trong shared/layout.js
 import * as THREE from 'three';
-import { LAYOUT, ROOM, CATEGORIES, DOOR } from '../shared/layout.js';
+import { LAYOUT, ROOM, DOOR } from '../shared/layout.js';
 
 const PI = Math.PI;
 const C = {
@@ -444,6 +444,17 @@ export function buildWorld(scene, renderer, { quality = 'high' } = {}) {
 
   // ---------- Kệ sách ----------
   const shelfHits = [];
+  const shelfLabels = new Map();
+  function drawShelfLabel(id, name) {
+    const L = shelfLabels.get(id); if (!L) return;
+    const g = L.canvas.getContext('2d'); const w = L.canvas.width, h = L.canvas.height;
+    g.fillStyle = '#1f1a17'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c4a061'; g.fillRect(0, 0, 92, h);
+    g.fillStyle = '#1f1a17'; g.font = '700 34px "JetBrains Mono", monospace'; g.textBaseline = 'middle'; g.fillText(id, 12, h / 2 + 2);
+    g.fillStyle = '#fff'; g.font = '600 30px "Be Vietnam Pro", sans-serif';
+    const n = name || 'Kệ trống'; g.fillText(n.length > 24 ? n.slice(0, 23) + '…' : n, 108, h / 2 + 2);
+    L.tex.needsUpdate = true;
+  }
   const bookSpots = [];
   const spinePalette = ['#1f4e8c', '#2d6fb7', '#f2efe8', '#c43b3b', '#e6b33b', '#3c8a5a', '#1d8a8f', '#e8742c', '#7a3a8c', '#f1e2c4', '#9fc3e8', '#d9534f', '#2c2c2c', '#e9d8a6', '#5aa0d8'];
   for (const sh of LAYOUT.shelves) {
@@ -485,13 +496,11 @@ export function buildWorld(scene, renderer, { quality = 'high' } = {}) {
     B.setFrame();
     const hit = new THREE.Mesh(new THREE.BoxGeometry(sh.w + 0.1, sh.h, sh.d + 0.1), new THREE.MeshBasicMaterial({ visible: false }));
     hit.position.set(sh.x, sh.h / 2, sh.z); hit.userData.shelf = sh; group.add(hit); shelfHits.push(hit);
-    // nhãn kệ
-    const lt = canvasTexture(512, 96, (g, w, h) => {
-      g.fillStyle = '#1f1a17'; g.fillRect(0, 0, w, h);
-      g.fillStyle = '#c4a061'; g.font = '600 30px "JetBrains Mono", monospace'; g.fillText(sh.id, 18, 60);
-      g.fillStyle = '#fff'; g.font = '600 30px "Be Vietnam Pro", sans-serif';
-      const name = CATEGORIES[sh.category]; g.fillText(name.length > 22 ? name.slice(0, 21) + '…' : name, 96, 60);
-    });
+    // nhãn kệ: mã kệ + tên (thủ thư đặt trong cửa sổ Quản lý sách)
+    const lc = document.createElement('canvas'); lc.width = 512; lc.height = 96;
+    const lt = new THREE.CanvasTexture(lc); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 8;
+    shelfLabels.set(sh.id, { canvas: lc, tex: lt });
+    drawShelfLabel(sh.id, '');
     const lm = new THREE.MeshBasicMaterial({ map: lt, side: THREE.DoubleSide });
     for (const s of [-1, 1]) {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.19), lm);
@@ -568,6 +577,7 @@ export function buildWorld(scene, renderer, { quality = 'high' } = {}) {
 
   return {
     group, floor, ceiling, seatHit, markers, hover, target, shelfHits, counterHit,
+    setShelfLabel: drawShelfLabel,
     setSeatColors(seats, myId) {
       const c = new THREE.Color();
       LAYOUT.seats.forEach((s, i) => {

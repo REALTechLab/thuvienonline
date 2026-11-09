@@ -8,12 +8,6 @@ export const ROOM = { w: 26, d: 30, h: 3.3 };
 export const DOOR = { x1: 12.4, x2: 14.4, z: 30 };
 export const SPAWN = { x: 13.4, z: 28.6, ry: PI };
 
-export const CATEGORIES = [
-  'Công nghệ thông tin', 'Trí tuệ nhân tạo & Dữ liệu', 'Điện – Điện tử', 'Xây dựng & Kiến trúc',
-  'Kinh tế học', 'Quản trị kinh doanh', 'Kế toán – Tài chính', 'Du lịch – Khách sạn',
-  'Y – Dược – Điều dưỡng', 'Ngoại ngữ', 'Luật học', 'Khoa học xã hội & Nhân văn',
-  'Toán & Khoa học tự nhiên', 'Văn học & Kỹ năng sống', 'Tạp chí & Báo', 'Sách mới về',
-];
 
 function buildLayout() {
   const walls = [];      // {x1,z1,x2,z2,kind:'solid'|'glass'|'partition'|'wood'}
@@ -77,7 +71,7 @@ function buildLayout() {
   for (const c of cols) {
     for (const z of rowZ) {
       const id = 'K' + String(shelves.length + 1).padStart(2, '0');
-      shelves.push({ id, x: c.x, z, w: c.w, d: 0.6, h: 2.1, axis: 'x', category: cat % 14, kind: 'tall' });
+      shelves.push({ id, x: c.x, z, w: c.w, d: 0.6, h: 2.1, axis: 'x', seed: cat % 14, kind: 'tall' });
       block(c.x, z, c.w, 0.6);
       cat++;
     }
@@ -155,8 +149,8 @@ function buildLayout() {
   furniture.push({ type: 'locker', x: 0.32, z: 25.2, w: 0.56, d: 7.0 });
   block(0.32, 25.2, 0.56, 7.0);
   for (const [i, x] of [[0, 5.15], [1, 7.65]]) {
-    const id = 'M' + (i + 1);
-    shelves.push({ id, x, z: 25.1, w: 0.62, d: 4.0, h: 1.45, axis: 'z', category: 14 + i, kind: 'rack' });
+    const id = 'K' + String(15 + i);
+    shelves.push({ id, x, z: 25.1, w: 0.62, d: 4.0, h: 1.45, axis: 'z', seed: 14 + i, kind: 'rack' });
     block(x, 25.1, 0.62, 4.0);
   }
   for (const sx of [3.8, 9.0]) {
@@ -173,10 +167,11 @@ function buildLayout() {
   block(12.1, 27.6, 0.25, 0.7);
   block(14.7, 27.6, 0.25, 0.7);
 
-  const LIBRARIAN = { x: 1.75, z: 17.6, ry: PI / 2 };
+  // Vị trí đứng trực của 2 thủ thư sau quầy (post 0, post 1)
+  const LIB_POSTS = [{ x: 1.75, z: 16.4, ry: PI / 2 }, { x: 1.75, z: 18.8, ry: PI / 2 }];
   const COUNTER_FRONT = { x: 4.2, z: 17.6 };
 
-  return { walls, blocks, furniture, seats, shelves, rooms, COUNTER, LIBRARIAN, COUNTER_FRONT };
+  return { walls, blocks, furniture, seats, shelves, rooms, COUNTER, LIB_POSTS, COUNTER_FRONT };
 }
 
 export const LAYOUT = buildLayout();

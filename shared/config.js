@@ -10,15 +10,15 @@ export const CONFIG = {
   STUDY_DAILY_CAP: 4,        // tối đa 4 điểm/ngày từ học & đọc
 
   // Xác nhận còn ở chỗ (chống treo máy lấy điểm)
-  PRESENCE_CHECK_SEC: 300,  // sau 5 phút hỏi "Bạn còn đang học?"
+  PRESENCE_CHECK_SEC: 900,  // sau 15 phút hỏi "Bạn còn đang học?"
   PRESENCE_TIMEOUT_SEC: 180, // không trả lời trong 3 phút thì tạm dừng tính điểm
 
   // Tương tác giữa sinh viên
   GREET_POINTS: 0.1,
-  GREET_PAIR_COOLDOWN_SEC: 120, // chào cùng 1 người: 2 phút mới được cộng lại
+  GREET_COOLDOWN_SEC: 120,      // chào hỏi: cộng điểm tối đa 1 lần / 2 phút
   GREET_DAILY_CAP: 2,           // tối đa 2 điểm/ngày từ chào hỏi
   GIFT_POINTS: 0.2,
-  GIFT_COOLDOWN_SEC: 900,      // tặng quà tối đa 1 lần / 15 phút
+  GIFT_COOLDOWN_SEC: 300,       // tặng đồ dùng tối đa 1 lần / 5 phút
   GIFT_REQUIRES_ITEM: true,     // phải có giấy/bút trong túi mới tặng được
 
   // Mượn trả
@@ -33,7 +33,39 @@ export const CONFIG = {
   CHAT_HISTORY: 60,
 
   MAX_ONLINE: 400,
+
+  // Tài khoản
+  USERNAME_LEN: 6,             // tên đăng nhập hệ thống tự tạo
+  PASSWORD_LEN: 4,             // mật khẩu người chơi tự đặt (có cả chữ và số)
+  LOGIN_MAX_FAIL: 5,           // nhập sai 5 lần...
+  LOGIN_LOCK_SEC: 300,         // ...khóa đăng nhập tài khoản đó 5 phút
+
+  // Thủ thư trực tiếp
+  LIB_REQUEST_TIMEOUT_SEC: 180, // yêu cầu chưa được duyệt sau 3 phút thì hệ thống tự xử lý
+  LIB_MAX_PENDING: 5,           // mỗi người tối đa 5 yêu cầu đang chờ
 };
+
+export const ROLES = { student: 'Sinh viên', lecturer: 'Giảng viên', librarian: 'Thủ thư' };
+
+// Tên đăng nhập: bỏ các ký tự dễ nhầm (0/O, 1/I/L)
+const U_LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ', U_DIGITS = '23456789';
+export function makeUsername(rand = Math.random) {
+  const all = U_LETTERS + U_DIGITS;
+  for (;;) {
+    let s = '';
+    for (let i = 0; i < CONFIG.USERNAME_LEN; i++) s += all[Math.floor(rand() * all.length)];
+    if (/[A-Z]/.test(s) && /\d/.test(s)) return s;
+  }
+}
+export const validPassword = (p) => new RegExp(`^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z0-9]{${CONFIG.PASSWORD_LEN}}$`).test(String(p || ''));
+export function suggestPassword(rand = Math.random) {
+  const L = 'abcdefghjkmnpqrstuvwxyz', D = '23456789';
+  for (;;) {
+    let s = '';
+    for (let i = 0; i < CONFIG.PASSWORD_LEN; i++) s += (i % 2 ? D : L)[Math.floor(rand() * (i % 2 ? D : L).length)];
+    if (validPassword(s)) return s;
+  }
+}
 
 export const SHOP = [
   { id: 'a4',        name: 'Giấy A4 (xấp 10 tờ)', price: 0.3, icon: '📄', giftable: true },

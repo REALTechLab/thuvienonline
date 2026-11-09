@@ -126,9 +126,9 @@ function mesh(geo, material, x = 0, y = 0, z = 0) {
 }
 
 export class Avatar {
-  constructor(avatar, { name = '', isSelf = false, isStaff = false } = {}) {
+  constructor(avatar, { name = '', isSelf = false, isStaff = false, isLecturer = false } = {}) {
     this.root = new THREE.Group();
-    this.isSelf = isSelf; this.isStaff = isStaff;
+    this.isSelf = isSelf; this.isStaff = isStaff; this.isLecturer = isLecturer;
     this.phase = Math.random() * 6; this.state = 'idle'; this.speed = 0;
     this.seatH = 0.46; this.seatType = 'wood'; this.activity = 'idle';
     this.emote = null; this.emoteT = 0; this.bubble = null; this.bubbleT = 0;
@@ -337,8 +337,8 @@ export class Avatar {
     if (this.label) { this.root.remove(this.label); this.label.material.map.dispose(); this.label.material.dispose(); }
     this.label = textSprite(name, {
       size: 26, pad: 10,
-      bg: this.isStaff ? 'rgba(44,64,163,.92)' : this.isSelf ? 'rgba(140,29,47,.94)' : 'rgba(255,255,255,.9)',
-      fg: this.isStaff || this.isSelf ? '#ffffff' : '#1f1a17',
+      bg: this.isStaff ? 'rgba(44,64,163,.92)' : this.isSelf ? 'rgba(140,29,47,.94)' : this.isLecturer ? 'rgba(184,146,79,.95)' : 'rgba(255,255,255,.9)',
+      fg: this.isStaff || this.isSelf || this.isLecturer ? '#ffffff' : '#1f1a17',
     });
     this.label.position.y = 1.98; this.root.add(this.label);
   }
