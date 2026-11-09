@@ -31,7 +31,7 @@ $('#ui').innerHTML = `
 <div id="auth" class="screen" hidden>
   <div class="auth-wrap">
     <section class="auth-brand">
-      <div class="eyebrow">Đại học Duy Tân · Trung tâm Thông tin – Thư viện</div>
+      <div class="eyebrow">Đại học Duy Tân · Thư viện số 03 Quang Trung</div>
       <h1>Thư viện <em>Online</em></h1>
       <p>Vào thư viện từ bất cứ đâu: chọn chỗ ngồi cạnh cửa kính, đọc sách ngay tại kệ, mượn trả với thủ thư và tích điểm cùng bạn bè.</p>
       <ul class="rules">

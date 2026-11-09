@@ -5,20 +5,20 @@ export const CONFIG = {
   // Điểm
   START_POINTS: 10,          // lần check-in đầu tiên: có sẵn 10 điểm
   CHECKIN_POINTS: 1,         // mỗi ngày check-in tiếp theo
-  STUDY_INTERVAL_SEC: 900,   // cứ 15 phút ngồi học / đọc sách...
+  STUDY_INTERVAL_SEC: 120,   // cứ 2 phút ngồi học / đọc sách...
   STUDY_POINTS: 0.5,         // ...được cộng 0.5 điểm
   STUDY_DAILY_CAP: 4,        // tối đa 4 điểm/ngày từ học & đọc
 
   // Xác nhận còn ở chỗ (chống treo máy lấy điểm)
-  PRESENCE_CHECK_SEC: 1800,  // sau 30 phút hỏi "Bạn còn đang học?"
+  PRESENCE_CHECK_SEC: 300,  // sau 5 phút hỏi "Bạn còn đang học?"
   PRESENCE_TIMEOUT_SEC: 180, // không trả lời trong 3 phút thì tạm dừng tính điểm
 
   // Tương tác giữa sinh viên
   GREET_POINTS: 0.1,
-  GREET_PAIR_COOLDOWN_SEC: 600, // chào cùng 1 người: 10 phút mới được cộng lại
+  GREET_PAIR_COOLDOWN_SEC: 120, // chào cùng 1 người: 2 phút mới được cộng lại
   GREET_DAILY_CAP: 2,           // tối đa 2 điểm/ngày từ chào hỏi
   GIFT_POINTS: 0.2,
-  GIFT_COOLDOWN_SEC: 3600,      // tặng quà tối đa 1 lần / giờ
+  GIFT_COOLDOWN_SEC: 900,      // tặng quà tối đa 1 lần / 15 phút
   GIFT_REQUIRES_ITEM: true,     // phải có giấy/bút trong túi mới tặng được
 
   // Mượn trả
